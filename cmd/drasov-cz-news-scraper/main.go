@@ -77,6 +77,7 @@ func StringDateToTime(date string) (*time.Time, error) {
 	return &t, nil
 }
 
+// ScrapeNewsEntries scrapes all news entries from the www.drasov.cz/uredni-deska website.
 func ScrapeNewsEntries() (News, error) {
 	// map of news entries by their URL
 	news := map[string]*NewsEntry{}
