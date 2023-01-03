@@ -9,6 +9,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -109,7 +110,7 @@ func StringDateToTime(date string) (*time.Time, error) {
 }
 
 // ScrapeNewsEntries scrapes all news entries from the www.drasov.cz/uredni-deska website.
-func ScrapeNewsEntries() (News, error) {
+func ScrapeNewsEntries(debug bool) (News, error) {
 	// map of news entries by their URL
 	news := map[string]*NewsEntry{}
 
@@ -118,7 +119,9 @@ func ScrapeNewsEntries() (News, error) {
 	detailsCollector := colly.NewCollector(allowedDomains)
 
 	detailsCollector.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting", r.URL)
+		if debug {
+			fmt.Fprintf(os.Stderr, "Visiting %s\n", r.URL)
+		}
 	})
 
 	detailsCollector.OnHTML(".c-card", func(e *colly.HTMLElement) {
@@ -139,7 +142,9 @@ func ScrapeNewsEntries() (News, error) {
 	allEntriesCollector := colly.NewCollector(allowedDomains)
 
 	allEntriesCollector.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting", r.URL)
+		if debug {
+			fmt.Fprintf(os.Stderr, "Visiting %s\n", r.URL)
+		}
 	})
 
 	allEntriesCollector.OnHTML(".c-office-board", func(e *colly.HTMLElement) {
@@ -191,11 +196,12 @@ func ScrapeNewsEntries() (News, error) {
 
 func main() {
 	minusDays := flag.Int("days", 30, "filter news entries published in the last N days")
+	debug := flag.Bool("debug", false, "enable debug mode")
 	flag.Parse()
 
 	sinceDate := NowDate().AddDate(0, 0, -*minusDays)
 
-	news, err := ScrapeNewsEntries()
+	news, err := ScrapeNewsEntries(*debug)
 	if err != nil {
 		panic(err)
 	}
