@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"strconv"
 	"strings"
@@ -151,14 +152,17 @@ func ScrapeNewsEntries() (News, error) {
 }
 
 func main() {
-	sinceTwoWeeksAgo := NowDate().AddDate(0, 0, -14)
+	minusDays := flag.Int("days", 30, "filter news entries published in the last N days")
+	flag.Parse()
+
+	sinceDate := NowDate().AddDate(0, 0, -*minusDays)
 
 	news, err := ScrapeNewsEntries()
 	if err != nil {
 		panic(err)
 	}
 
-	for _, newsEntry := range news.SinceIncluding(sinceTwoWeeksAgo) {
+	for _, newsEntry := range news.SinceIncluding(sinceDate) {
 		fmt.Printf("%+v\n", newsEntry)
 	}
 }
