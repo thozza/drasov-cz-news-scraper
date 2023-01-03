@@ -51,9 +51,9 @@ func StringDateToTime(date string) (*time.Time, error) {
 	return &t, nil
 }
 
-func ScrapeNewsEntries() ([]NewsEntry, error) {
+func ScrapeNewsEntries() ([]*NewsEntry, error) {
 	// map of news entries by their URL
-	news := map[string]NewsEntry{}
+	news := map[string]*NewsEntry{}
 
 	allowedDomains := colly.AllowedDomains("drasov.cz", "www.drasov.cz")
 
@@ -76,8 +76,6 @@ func ScrapeNewsEntries() ([]NewsEntry, error) {
 				URL:      e.ChildAttr("a", "href"),
 			})
 		})
-
-		news[newsEntry.EntryURL] = newsEntry
 	})
 
 	allEntriesCollector := colly.NewCollector(allowedDomains)
@@ -114,7 +112,7 @@ func ScrapeNewsEntries() ([]NewsEntry, error) {
 				return false
 			})
 
-			news[newsEntry.EntryURL] = newsEntry
+			news[newsEntry.EntryURL] = &newsEntry
 			err := detailsCollector.Visit(newsEntry.EntryURL)
 			if err != nil {
 				panic(fmt.Sprintf("error while collecting details from %s: %s", newsEntry.EntryURL, err))
