@@ -22,12 +22,31 @@ type NewsEntryAttachment struct {
 	URL      string
 }
 
+func (n NewsEntryAttachment) String() string {
+	return fmt.Sprintf("%s: %s", n.Filename, n.URL)
+}
+
 type NewsEntry struct {
 	PublishedOn    *time.Time
 	PublishedUntil *time.Time
 	Title          string
 	EntryURL       string
 	Attachments    []NewsEntryAttachment
+}
+
+func (n NewsEntry) String() string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Title: %s\n", n.Title))
+	sb.WriteString(fmt.Sprintf("Published on: %s\n", n.PublishedOn.Format("Mon 02.01.2006")))
+	sb.WriteString(fmt.Sprintf("Published until: %s\n", n.PublishedUntil.Format("Mon 02.01.2006")))
+	sb.WriteString(fmt.Sprintf("URL: %s\n", n.EntryURL))
+	if len(n.Attachments) > 0 {
+		sb.WriteString("Attachments:\n")
+		for _, attachment := range n.Attachments {
+			sb.WriteString(fmt.Sprintf("  %s\n", attachment.String()))
+		}
+	}
+	return sb.String()
 }
 
 type News []*NewsEntry
@@ -41,6 +60,18 @@ func (n News) SinceIncluding(t time.Time) News {
 		}
 	}
 	return news
+}
+
+// String returns a string representation of the news entries.
+func (n News) String() string {
+	var sb strings.Builder
+	for idx, newsEntry := range n {
+		sb.WriteString(newsEntry.String())
+		if idx < len(n)-1 {
+			sb.WriteString("\n")
+		}
+	}
+	return sb.String()
 }
 
 // NowDate returns the current date without the clock time, ignoring the timezone.
@@ -169,7 +200,5 @@ func main() {
 		panic(err)
 	}
 
-	for _, newsEntry := range news.SinceIncluding(sinceDate) {
-		fmt.Printf("%+v\n", newsEntry)
-	}
+	fmt.Println(news.SinceIncluding(sinceDate))
 }
