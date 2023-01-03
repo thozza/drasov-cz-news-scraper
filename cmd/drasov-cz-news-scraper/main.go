@@ -18,6 +18,8 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+const dateFormat = "Mon 02.01.2006"
+
 type NewsEntryAttachment struct {
 	Filename string
 	URL      string
@@ -38,8 +40,8 @@ type NewsEntry struct {
 func (n NewsEntry) String() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Title: %s\n", n.Title))
-	sb.WriteString(fmt.Sprintf("Published on: %s\n", n.PublishedOn.Format("Mon 02.01.2006")))
-	sb.WriteString(fmt.Sprintf("Published until: %s\n", n.PublishedUntil.Format("Mon 02.01.2006")))
+	sb.WriteString(fmt.Sprintf("Published on: %s\n", n.PublishedOn.Format(dateFormat)))
+	sb.WriteString(fmt.Sprintf("Published until: %s\n", n.PublishedUntil.Format(dateFormat)))
 	sb.WriteString(fmt.Sprintf("URL: %s\n", n.EntryURL))
 	if len(n.Attachments) > 0 {
 		sb.WriteString("Attachments:\n")
@@ -206,5 +208,12 @@ func main() {
 		panic(err)
 	}
 
+	filteredNews := news.SinceIncluding(sinceDate)
+	if len(filteredNews) == 0 {
+		fmt.Printf("Found no news entries published since %s\n", sinceDate.Format(dateFormat))
+		return
+	}
+
+	fmt.Printf("Found %d news entries published since %s:\n", len(filteredNews), sinceDate.Format(dateFormat))
 	fmt.Println(news.SinceIncluding(sinceDate))
 }
