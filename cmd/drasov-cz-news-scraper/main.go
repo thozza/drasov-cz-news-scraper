@@ -1,3 +1,9 @@
+/*
+ * www.drasov.cz/uredni-deska news scraper
+ *
+ * Copyright (C) 2023  Tomáš Hozza
+ */
+
 package main
 
 import (
