@@ -23,6 +23,25 @@ type NewsEntry struct {
 	Attachments    []NewsEntryAttachment
 }
 
+type News []*NewsEntry
+
+// Since returns all news entries that were published since the given time, including the given time.
+func (n News) SinceIncluding(t time.Time) News {
+	var news News
+	for _, newsEntry := range n {
+		if newsEntry.PublishedOn.After(t) || newsEntry.PublishedOn.Equal(t) {
+			news = append(news, newsEntry)
+		}
+	}
+	return news
+}
+
+// NowDate returns the current date without the clock time, ignoring the timezone.
+func NowDate() time.Time {
+	now := time.Now()
+	return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+}
+
 // StringDateToTime converts a string date in the format "DD. MM. YYYY" to a time.Time object.
 func StringDateToTime(date string) (*time.Time, error) {
 	// expected format: "1. 12. 2021"
@@ -51,7 +70,7 @@ func StringDateToTime(date string) (*time.Time, error) {
 	return &t, nil
 }
 
-func ScrapeNewsEntries() ([]*NewsEntry, error) {
+func ScrapeNewsEntries() (News, error) {
 	// map of news entries by their URL
 	news := map[string]*NewsEntry{}
 
@@ -132,12 +151,14 @@ func ScrapeNewsEntries() ([]*NewsEntry, error) {
 }
 
 func main() {
+	sinceTwoWeeksAgo := NowDate().AddDate(0, 0, -14)
+
 	news, err := ScrapeNewsEntries()
 	if err != nil {
 		panic(err)
 	}
 
-	for _, newsEntry := range news {
+	for _, newsEntry := range news.SinceIncluding(sinceTwoWeeksAgo) {
 		fmt.Printf("%+v\n", newsEntry)
 	}
 }
