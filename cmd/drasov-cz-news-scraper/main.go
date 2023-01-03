@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gocolly/colly/v2"
 	"golang.org/x/exp/maps"
@@ -13,11 +16,39 @@ type NewsEntryAttachment struct {
 }
 
 type NewsEntry struct {
-	PublishedOn    string
-	PublishedUntil string
+	PublishedOn    *time.Time
+	PublishedUntil *time.Time
 	Title          string
 	EntryURL       string
 	Attachments    []NewsEntryAttachment
+}
+
+// StringDateToTime converts a string date in the format "DD. MM. YYYY" to a time.Time object.
+func StringDateToTime(date string) (*time.Time, error) {
+	// expected format: "1. 12. 2021"
+	parts := strings.Split(date, ".")
+
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("unexpected date format: %s", date)
+	}
+
+	day, err := strconv.Atoi(strings.TrimSpace(parts[0]))
+	if err != nil {
+		return nil, err
+	}
+
+	month, err := strconv.Atoi(strings.TrimSpace(parts[1]))
+	if err != nil {
+		return nil, err
+	}
+
+	year, err := strconv.Atoi(strings.TrimSpace(parts[2]))
+	if err != nil {
+		return nil, err
+	}
+
+	t := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+	return &t, nil
 }
 
 func ScrapeNewsEntries() ([]NewsEntry, error) {
@@ -62,10 +93,15 @@ func ScrapeNewsEntries() ([]NewsEntry, error) {
 
 			// extract PublishedOn and PublishedUntil dates
 			e.ForEach(".c-office-board__col-date", func(idx int, e *colly.HTMLElement) {
+				date, err := StringDateToTime(e.ChildTexts("span")[1])
+				if err != nil {
+					panic(fmt.Sprintf("error while parsing date: %s", err))
+				}
+
 				if idx == 0 {
-					newsEntry.PublishedOn = e.ChildTexts("span")[1]
+					newsEntry.PublishedOn = date
 				} else if idx == 1 {
-					newsEntry.PublishedUntil = e.ChildTexts("span")[1]
+					newsEntry.PublishedUntil = date
 				} else {
 					panic("unexpected index while iterating over .c-office-board__col-date")
 				}
